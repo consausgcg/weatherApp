@@ -9,7 +9,49 @@ import SwiftUI
 
 struct ContentView: View {
     
+    @State var cityString:String = "Edinburg, US"
+    @State var cityTempeture:Double = 0
     @State private var isNight = false
+    @State var data = WeatherData(
+        city: CityData(name: "Edinburg, US"),
+        list: [
+            DayWeatherData(main: TempetureData(temp: 3)),
+            DayWeatherData(main: TempetureData(temp: 3)),
+            DayWeatherData(main: TempetureData(temp: 3)),
+            DayWeatherData(main: TempetureData(temp: 3)),
+            DayWeatherData(main: TempetureData(temp: 3))
+       ]
+    )
+    
+    
+    func getWeather(){
+        let urlString:String = "https://api.openweathermap.org/data/2.5/forecast?q=McAllen,US&appid=f0a0d54cf7d91405eac6eb8676888906&cnt=5&units=metric"
+        
+            let url = URL(string: urlString)
+        
+        print(urlString)
+            
+            URLSession.shared.dataTask(with: url!) {
+                data, _, error in
+                
+                DispatchQueue.main.async {
+                    
+                    if let data = data {
+                        do {
+                            let decoder = JSONDecoder()
+                            let decodedData = try decoder.decode(WeatherData.self, from: data)
+                            self.data = decodedData
+                            self.cityString = self.data.city.name
+                            self.cityTempeture = self.data.list[0].main.temp
+                        } catch {
+                            print("Error!")
+                        }
+                    }
+                
+                }
+            }.resume()
+        }
+    
     
     var body: some View {
         ZStack{
@@ -17,26 +59,34 @@ struct ContentView: View {
             
             VStack(spacing: 10) {
                 
-                CityTextView(cityName: "Edinburg, TX")
+                CityTextView(cityName: cityString)
                 CurrentWeatherStatusView(
                     weatherIcon: isNight ?
                         "moon.stars.fill" : "cloud.sun.fill",
-                    tempeture: 90)
+                    tempeture: Int(cityTempeture))
                 
                 HStack(spacing: 20){
-                    WeatherDayView(dayOfWeek: "TUE", imageName: "cloud.sun.fill", temperature: 76)
+                    WeatherDayView(dayOfWeek: "TUE", imageName: "cloud.sun.fill", temperature: Int(self.data.list[0].main.temp))
                     
-                    WeatherDayView(dayOfWeek: "WED", imageName: "cloud.sun.fill", temperature: 76)
+                    WeatherDayView(dayOfWeek: "WED", imageName: "cloud.sun.fill", temperature: Int(self.data.list[1].main.temp))
                     
-                    WeatherDayView(dayOfWeek: "THU", imageName: "cloud.sun.fill", temperature: 76)
+                    WeatherDayView(dayOfWeek: "THU", imageName: "cloud.sun.fill", temperature: Int(self.data.list[2].main.temp))
                     
-                    WeatherDayView(dayOfWeek: "FRI", imageName: "cloud.sun.fill", temperature: 76)
+                    WeatherDayView(dayOfWeek: "FRI", imageName: "cloud.sun.fill", temperature: Int(self.data.list[3].main.temp))
                     
-                    WeatherDayView(dayOfWeek: "SAT", imageName: "cloud.sun.fill", temperature: 76)
+                    WeatherDayView(dayOfWeek: "SAT", imageName: "cloud.sun.fill", temperature: Int(self.data.list[4].main.temp))
                     
                 }
                 
                 Spacer()
+                
+                Button{
+                    self.getWeather()
+                } label: {
+                    DefaultButton(text: "Fetch",
+                                  textColor: .blue,
+                                  backgroundColor: .white)
+                }
                 
                 Button{
                     isNight.toggle()
