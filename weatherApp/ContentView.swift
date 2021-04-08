@@ -9,9 +9,10 @@ import SwiftUI
 
 struct ContentView: View {
     
-    @State var cityString:String = "Edinburg, US"
+    @State var cityString:String = ""
     @State var cityTempeture:Double = 0
     @State private var isNight = false
+    @State private var initialSearch = false
     @State var data = WeatherData(
         city: CityData(name: "Edinburg, US"),
         list: [
@@ -25,7 +26,10 @@ struct ContentView: View {
     
     
     func getWeather(){
-        let urlString:String = "https://api.openweathermap.org/data/2.5/forecast?q=McAllen,US&appid=f0a0d54cf7d91405eac6eb8676888906&cnt=5&units=metric"
+        
+        self.initialSearch = true
+        
+        let urlString:String = "https://api.openweathermap.org/data/2.5/forecast?q=\(self.cityString.replacingOccurrences(of: " ", with: "")),US&appid=f0a0d54cf7d91405eac6eb8676888906&cnt=5&units=metric"
         
             let url = URL(string: urlString)
         
@@ -52,52 +56,58 @@ struct ContentView: View {
             }.resume()
         }
     
-    
     var body: some View {
         ZStack{
             BackgroundView(isNight: $isNight)
             
             VStack(spacing: 10) {
                 
-                CityTextView(cityName: cityString)
-                CurrentWeatherStatusView(
-                    weatherIcon: isNight ?
-                        "moon.stars.fill" : "cloud.sun.fill",
-                    tempeture: Int(cityTempeture))
                 
-                HStack(spacing: 20){
-                    WeatherDayView(dayOfWeek: "TUE", imageName: "cloud.sun.fill", temperature: Int(self.data.list[0].main.temp))
+                initialSearch ? Group{
                     
-                    WeatherDayView(dayOfWeek: "WED", imageName: "cloud.sun.fill", temperature: Int(self.data.list[1].main.temp))
+                    Spacer()
                     
-                    WeatherDayView(dayOfWeek: "THU", imageName: "cloud.sun.fill", temperature: Int(self.data.list[2].main.temp))
+                    Button{
+                        isNight.toggle()
+                    } label: {
+                        DefaultButton(text: "Change Day Time",
+                                      textColor: .blue,
+                                      backgroundColor: .white)
+                    }
                     
-                    WeatherDayView(dayOfWeek: "FRI", imageName: "cloud.sun.fill", temperature: Int(self.data.list[3].main.temp))
+                    CityTextView(cityName: cityString)
+                    CurrentWeatherStatusView(
+                        weatherIcon: isNight ?
+                            "moon.stars.fill" : "cloud.sun.fill",
+                        tempeture: Int(cityTempeture))
                     
-                    WeatherDayView(dayOfWeek: "SAT", imageName: "cloud.sun.fill", temperature: Int(self.data.list[4].main.temp))
+                    HStack(spacing: 20){
+                        WeatherDayView(dayOfWeek: "TUE", imageName: "cloud.sun.fill", temperature: Int(self.data.list[0].main.temp))
+                        
+                        WeatherDayView(dayOfWeek: "WED", imageName: "cloud.sun.fill", temperature: Int(self.data.list[1].main.temp))
+                        
+                        WeatherDayView(dayOfWeek: "THU", imageName: "cloud.sun.fill", temperature: Int(self.data.list[2].main.temp))
+                        
+                        WeatherDayView(dayOfWeek: "FRI", imageName: "cloud.sun.fill", temperature: Int(self.data.list[3].main.temp))
+                        
+                        WeatherDayView(dayOfWeek: "SAT", imageName: "cloud.sun.fill", temperature: Int(self.data.list[4].main.temp))
+                        
+                    }
                     
+                    Spacer()
+                } : nil
+                
+                VStack {
+                    TextField("Enter city name", text: $cityString)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    Button{
+                        self.getWeather()
+                    } label: {
+                        DefaultButton(text: "Lookup",
+                                      textColor: .blue,
+                                      backgroundColor: .white)
+                    }
                 }
-                
-                Spacer()
-                
-                Button{
-                    self.getWeather()
-                } label: {
-                    DefaultButton(text: "Fetch",
-                                  textColor: .blue,
-                                  backgroundColor: .white)
-                }
-                
-                Button{
-                    isNight.toggle()
-                } label: {
-                    DefaultButton(text: "Change Day Time",
-                                  textColor: .blue,
-                                  backgroundColor: .white)
-                }
-                
-                Spacer()
-                
             }
         }
     }
